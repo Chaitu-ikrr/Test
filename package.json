@@ -7,6 +7,6 @@
   },
   "type": "module",
   "dependencies": {
-    "livekit-server-sdk": "^0.15.2"
+    "livekit-server-sdk": "^0.12.10"
   }
 }
