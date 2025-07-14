@@ -30,36 +30,46 @@
     <video id="localVideo" autoplay muted playsinline></video>
 
     <script type="module">
-      import { Room, connect } from "https://cdn.skypack.dev/livekit-client";
+  import * as livekit from "https://cdn.skypack.dev/livekit-client";
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const identity = urlParams.get("username");
-      const roomName = urlParams.get("room");
+  const urlParams = new URLSearchParams(window.location.search);
+  const identity = urlParams.get("username");
+  const roomName = urlParams.get("room");
 
-      const res = await fetch("/api/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identity, room: roomName })
-      });
+  if (!identity || !roomName) {
+    alert("Missing username or room in URL");
+  }
 
-      const token = await res.text();
-      const room = await connect("wss://chatuuuu-2h4maxsh.livekit.cloud", token);
+  const res = await fetch("/api/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identity, room: roomName })
+  });
 
-      const localVideo = document.getElementById("localVideo");
-      room.localParticipant.videoTracks.forEach(publication => {
-        const track = publication.videoTrack;
-        if (track) track.attach(localVideo);
-      });
+  const token = await res.text();
+  console.log("TOKEN:", token);
 
-      room.on("trackSubscribed", (track, publication, participant) => {
-        if (track.kind === "video") {
-          const remoteVideo = document.createElement("video");
-          remoteVideo.autoplay = true;
-          remoteVideo.playsInline = true;
-          track.attach(remoteVideo);
-          document.body.appendChild(remoteVideo);
-        }
-      });
-    </script>
+  const room = new livekit.Room();
+
+  await room.connect("wss://chatuuuu-2h4maxsh.livekit.cloud", token);
+
+  // Show local video
+  const localVideo = document.getElementById("localVideo");
+  const localTracks = await livekit.createLocalTracks();
+  await room.localParticipant.publishTrack(localTracks[1]); // [1] = video
+
+  localTracks[1].attach(localVideo);
+
+  // Subscribe to remote tracks
+  room.on("trackSubscribed", (track, publication, participant) => {
+    if (track.kind === "video") {
+      const remoteVideo = document.createElement("video");
+      remoteVideo.autoplay = true;
+      remoteVideo.playsInline = true;
+      track.attach(remoteVideo);
+      document.body.appendChild(remoteVideo);
+    }
+  });
+</script>
   </body>
 </html>
