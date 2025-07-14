@@ -1,0 +1,12 @@
+{
+  "name": "chatuuu-meet-full",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "type": "module",
+  "dependencies": {
+    "livekit-server-sdk": "^0.15.2"
+  }
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chatuuu Meet</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        color: white;
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      video {
+        width: 80vw;
+        max-width: 720px;
+        border: 2px solid #ff5722;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Chatuuu Meet</h2>
+    <video id="localVideo" autoplay muted playsinline></video>
+
+    <script type="module">
+      import { Room, connect } from "https://cdn.skypack.dev/livekit-client";
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const identity = urlParams.get("username");
+      const roomName = urlParams.get("room");
+
+      const res = await fetch("/api/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identity, room: roomName })
+      });
+
+      const token = await res.text();
+      const room = await connect("wss://chatuuuu-2h4maxsh.livekit.cloud", token);
+
+      const localVideo = document.getElementById("localVideo");
+      room.localParticipant.videoTracks.forEach(publication => {
+        const track = publication.videoTrack;
+        if (track) track.attach(localVideo);
+      });
+
+      room.on("trackSubscribed", (track, publication, participant) => {
+        if (track.kind === "video") {
+          const remoteVideo = document.createElement("video");
+          remoteVideo.autoplay = true;
+          remoteVideo.playsInline = true;
+          track.attach(remoteVideo);
+          document.body.appendChild(remoteVideo);
+        }
+      });
+    </script>
+  </body>
+</html>
